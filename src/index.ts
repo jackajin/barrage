@@ -1,3 +1,5 @@
+import reactDom from 'react-dom'
+
 interface OptionType {
   /** 没一行弹幕的高度，默认60px */
   rowHeight?: number
@@ -7,13 +9,19 @@ interface OptionType {
 
   /** 弹幕间距，默认90 */
   space?: number
+
+  /** 节点更新方式，默认react，1.0.2 以前不支持 react 更新 */
+  type?: 'react' | 'native'
 }
+
+type ValueType = React.ReactElement | string
 
 type BarrageQueue = Array<{
   root: Element;
   left: number;
-  value: string
+  value: ValueType
 }> | []
+
 
 // 容器高度
 let wrapHeight = 0
@@ -21,44 +29,49 @@ let wrapHeight = 0
 let wrapWidth = 0
 // 容器元素
 let wrapElement: Element | null = null
+
 // 一行弹幕的高度
 let rowHeight = 60
-
 /** 弹幕的间距 */
 let space = 90
 /** 移动速度 */
 let speed = 120
-
+// 有多少行弹幕轨道
 let rows = 0
+// 节点插入方式
+let updateType: OptionType['type'] = 'react'
 
 /** 行 div 的集合 */
 const lineNodeList: Element[] = []
-
 /** 每个弹幕div 的集合 */
 const itemNodeList: any[] = []
-
 /** 该渲染那一行弹幕 */
 let currentIndex = 0
-
 /** 每一行最后一个div */
 const lastElementList: Element[] = []
 
 let index = 0
-const createBarrage = (option: any) => {
+
+/** 所有的class节点 */
+const nodeList: string[] = []
+
+
+/** 创建弹幕方法 */
+const createBarrage = (option: BarrageQueue[0]) => {
   const { root, value, left } = option
   const div = document.createElement('div')
   const idName = `item${index}`
 
-  div.innerHTML = value
+  updateType === 'react' ? reactDom.render(value, div) : (div.innerHTML = value as string)
 
   div.setAttribute(
     'style',
-    'position: absolute;'.concat('left: ', left, 'px;')
+    'position: absolute;'.concat('left: ', left + '', 'px;')
+    .concat('width: max-content')
   )
   div.id = idName
   index++
-
-  // 判断当前弹幕，是否超出了父级的宽度，如果超过了，则放入队列
+ 
   root.appendChild(div)
 
   const { width } = div.getBoundingClientRect()
@@ -69,9 +82,10 @@ const createBarrage = (option: any) => {
 
   div.setAttribute(
     'style',
-    'position: absolute;'.concat('left: ', left, 'px;')
+    'position: absolute;'.concat('left: ', left + '', 'px;')
       .concat('transform: translateX(', (`${-dis}`), 'px);')
       .concat('transition: transform ', time, 's', ' linear;')
+      .concat('width: max-content')
   )
 
   lastElementList[currentIndex] = div
@@ -88,18 +102,25 @@ const createBarrage = (option: any) => {
   })
 }
 
+
+
 class Barrage {
   /** 动画 的 状态 */
   state = 'beginning'
   /** 调用方法的 日志 */
   callLog = ''
-  
-  barrageQueue: BarrageQueue = []
 
+  // static instance: Barrage | null = null
+  
   constructor(element: string, option: OptionType) {
     rowHeight = option?.rowHeight || 60
     speed = option?.speed || speed
     space = option?.space || space
+
+    // 有相同的class，不允许实例化
+    if(nodeList.includes(element)) {
+      throw Error(`${element} is already crated`)
+    }
 
     if (typeof element !== 'string') {
       throw Error('dom is not a dom element')
@@ -110,12 +131,21 @@ class Barrage {
     if (dom === null) {
       throw Error('dom is not a dom element')
     }
+    nodeList.push(element)
     wrapElement = dom
-    this.init()
-    // this.visibilitychange()
+    Barrage.init()
+    this.visibilitychange()
   }
 
-  init() {
+  // static create(element: string, option: OptionType) {
+  //   if(!this.instance) {
+  //     return new Barrage(element, option)
+  //   }else {
+  //     return this.instance
+  //   }
+  // }
+
+  private static init() {
     // 容器高度
     wrapHeight = wrapElement?.clientHeight || 0
     // 容器宽度
@@ -141,18 +171,21 @@ class Barrage {
   private static crateLine() {
     for (let i = 0; i < rows; i++) {
       const div = document.createElement('div')
-      div.className = 'item-line'
+      div.className = 'barrage-item-line'
       div.setAttribute(
         'style',
-        'width: 800%; height: '.concat(`${rowHeight}px;`).concat('position: relative;').concat('overflow: hidden')
+        'width: 100%; height: '.concat(`${rowHeight}px;`).concat('position: relative;').concat('overflow: hidden')
       )
       lineNodeList.push(div)
       wrapElement!.appendChild(div)
     }
   }
 
-  /** 添加一个弹幕 */
-  push(value: string) {
+  /** 
+   * @description 添加一个弹幕
+   * @param 弹幕dom
+   */
+  push(value: ValueType) {
     if (this.state === 'paused') { return }
     this.callLog = 'push'
 
@@ -176,8 +209,11 @@ class Barrage {
     currentIndex = currentIndex === (rows - 1) ? 0 : (currentIndex + 1)
   }
 
-  /** 添加弹幕列表 */
-  pushList(value: string[]) {
+  /** 
+   * @description 添加弹幕列表
+   * @param 弹幕数组
+   */
+  pushList(value: ValueType[]) {
     if (this.state === 'paused') { return }
     this.callLog = 'pushList'
 
@@ -237,25 +273,25 @@ class Barrage {
   }
 
   /** 初始化，铺满屏幕，只在能调用一次, 在所有方法之前调用 */
-  initFull(value: string[]) {
+  initFull(value: ValueType[]) {
     if (this.callLog !== '') { return }
     this.callLog = 'initFull'
-
     let len = value.length
 
-    while (len > 0) {
-      len--
-      const node = lineNodeList[currentIndex]
-      const lastDiv = lastElementList[currentIndex]
-      const { width, left } = lastDiv?.getBoundingClientRect() || {}
-
-      createBarrage({
-        root: node,
-        left: width ? (left + width + space) : 20,
-        value: value[len]
-      })
-      currentIndex = currentIndex === (rows - 1) ? 0 : (currentIndex + 1)
-    }
+    // 放入异步，否则react 更新会出现问题
+    setTimeout(() => {
+      for(let i = 0; i < len; i++) {
+        const node = lineNodeList[currentIndex]
+        const lastDiv = lastElementList[currentIndex]
+        const { width, left } = lastDiv?.getBoundingClientRect() || {}
+        createBarrage({
+          root: node,
+          left: width ? (left + width + space) : 20,
+          value: value[i]
+        })
+        currentIndex = currentIndex === (rows - 1) ? 0 : (currentIndex + 1)
+      }
+    }, 0)
   }
 }
 

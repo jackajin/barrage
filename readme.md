@@ -33,3 +33,20 @@ export default () => {
   )
 }
 ```
+
+# 使用原生节点
+```js
+ref.current.push(
+  `<div class="display: flex">
+    <div>ajin</div>
+    <div>0000</div>
+    <div>1111</div>
+  </div>`
+  )
+```
+
+# 使用react 节点
+```js
+const App = () => <div>1111</div>
+ref.current.push(<App />)
+```
