@@ -1,6 +1,6 @@
 {
   "name": "yp-barrage",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,9 +8,18 @@
     "build": "webpack",
     "start": "node ./script/index.js"
   },
-  "keywords": ["弹幕", "react", "barrage", "滚动弹幕"],
-  "author": "",
+  "keywords": [
+    "弹幕",
+    "react",
+    "barrage",
+    "滚动弹幕"
+  ],
+  "author": "ajin",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jackajin/barrage.git"
+  },
   "devDependencies": {
     "@babel/core": "^7.18.10",
     "@babel/preset-env": "^7.18.10",

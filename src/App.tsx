@@ -4,7 +4,7 @@ import Barrage from './index'
 import { config } from './config'
 
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import * as React from 'react'
 
 
@@ -12,7 +12,6 @@ const Home = () => {
   const ref = useRef<Barrage>()
 
 
-  const reatRef = useRef<Barrage>()
 
   const index = useRef(5)
 

@@ -2,7 +2,11 @@ const path = require('path')
 module.exports = {
   mode: 'production',
   // mode: 'development',
+  // entry: {
+  //   singleFile: './main/index.ts',
+  // },
   entry: './src/index.ts',  // 要打包的入口文件
+ 
   module: {
     rules: [
       {
@@ -19,6 +23,7 @@ module.exports = {
     filename: 'index.js',
     path: path.resolve(__dirname, 'dist'),
     libraryTarget: 'amd',
+    clean: true
     // clear: true,
   },
 };

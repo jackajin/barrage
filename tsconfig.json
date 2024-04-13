@@ -18,5 +18,6 @@
     "noUnusedLocals": true,
     "declaration": true,  // 生成声明文件 (.d.ts)，这样其他 TypeScript 项目在使用你的库时就可以获得类型提示了
     "experimentalDecorators": true
-  }
+  },
+  "include": ["./src/index.ts"],
 }

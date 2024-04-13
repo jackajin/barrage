@@ -1,4 +1,4 @@
-import reactDom from 'react-dom'
+import * as reactDom from 'react-dom';
 
 interface OptionType {
   /** 没一行弹幕的高度，默认60px */
@@ -62,7 +62,7 @@ const createBarrage = (option: BarrageQueue[0]) => {
   const div = document.createElement('div')
   const idName = `item${index}`
 
-  updateType === 'react' ? reactDom.render(value, div) : (div.innerHTML = value as string)
+  updateType === 'react' ? reactDom.render(value as React.ReactElement, div) : (div.innerHTML = value as string)
 
   div.setAttribute(
     'style',
@@ -116,7 +116,7 @@ class Barrage {
     rowHeight = option?.rowHeight || 60
     speed = option?.speed || speed
     space = option?.space || space
-
+    updateType = option.type || 'react'
     // 有相同的class，不允许实例化
     if(nodeList.includes(element)) {
       throw Error(`${element} is already crated`)
